@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "nuxt",
-    "build": "nuxt build",
+    "generate": "nuxt generate",
     "start": "nuxt start",
-    "generate": "nuxt generate"
+    "deploy": "push-dir --dir=dist --branch=gh-pages --cleanup"
   },
   "dependencies": {
     "audio-buffer-utils": "^5.1.2",
@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@nuxtjs/vuetify": "^1.12.1",
+    "push-dir": "^0.4.1",
     "sass": "^1.55.0",
     "sass-loader": "^10.3.1"
   }
