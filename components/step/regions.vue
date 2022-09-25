@@ -32,7 +32,11 @@
       v-show="!open"
       width="100%"
     >
-      <div id="waveform" class="flex-grow-1"></div>
+      <div
+        id="waveform"
+        class="flex-grow-1 scroll--simple"
+      >
+      </div>
     </v-card>
     <!-- Actions -->
     <slot name="actions"></slot>

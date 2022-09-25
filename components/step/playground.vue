@@ -1,5 +1,8 @@
 <template>
-  <v-container class="pa-0" id="audio-playground">
+  <v-container
+    class="pa-0"
+    id="audio-playground"
+  >
     <v-banner
       icon="mdi-gesture-swipe-down"
       class="text-left mb-4"
@@ -30,6 +33,9 @@
           ripple
           @click="playRegion(chunk.regionAsSubBuffer)"
         >
+          <div class="tag-overlay">
+            {{ chunk.region.data.tag }}  
+          </div> 
           <canvas
             :id="`audio-chunk-${chunk.regionAsSubBuffer.length}`"
             :width="canvasSize"
@@ -55,7 +61,11 @@
           width="100%"
           class="mb-4"
         >
-          <div id="speech-waveform"></div>
+          <div
+            id="speech-waveform"
+            class="scroll--simple"
+          >
+          </div>
         </v-sheet>
       </draggable>
       <!-- Speech Actions -->
@@ -115,7 +125,9 @@ export default {
     speechChunks: [],
     drag: false,
     speechBuffer: null,
-    wavesurfer: null
+    wavesurfer: null,
+    playingRegion: false,
+    currentSource: null
   }),
   computed: {
     canvasSize: function () {
@@ -163,11 +175,20 @@ export default {
       this.$tearupWavesurferControls(this.wavesurfer)
     },
     playRegion(region) {
-      const source = this.audioCtx.createBufferSource()
+      // Stop region
+      if (this.playingRegion) this.currentSource.stop()
+
+      this.playingRegion = true
       
-      source.buffer = region
-      source.connect(this.audioCtx.destination)
-      source.start()      
+      this.currentSource = this.audioCtx.createBufferSource()
+      this.currentSource.buffer = region
+      this.currentSource.connect(this.audioCtx.destination)
+      this.currentSource.start()
+      
+      // Update
+      this.currentSource.onended = () => {
+        this.playingRegion = false
+      }
     },
     updateSpeech({ added: { element: chunk }}) {
       let {
@@ -227,6 +248,30 @@ export default {
 #speech-waveform {
   wave {
     width: 100%!important;
+  }
+}
+
+.region-card {
+  position: relative;
+  overflow: hidden;
+  canvas {
+    position: relative;
+    z-index: 1;
+  }
+  .tag-overlay {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0, .5);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    color: white;
   }
 }
 

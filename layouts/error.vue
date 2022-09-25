@@ -1,14 +1,34 @@
 <template>
   <v-app dark>
-    <h1 v-if="error.statusCode === 404">
-      {{ pageNotFound }}
-    </h1>
-    <h1 v-else>
-      {{ otherError }}
-    </h1>
-    <NuxtLink to="/">
-      Home page
-    </NuxtLink>
+    <v-container class="pa-0">
+      <v-banner two-line class="py-8">
+        <v-avatar
+          slot="icon"
+          color="warning accent-4"
+          size="40"
+        >
+          <v-icon
+            icon="mdi-message-alert-outline"
+            color="white"
+          >
+            mdi-message-alert-outline
+          </v-icon>
+        </v-avatar>
+        {{ error.message }}
+        <template v-slot:actions>
+          <v-btn
+            text
+            color="warning accent-4"
+            href="https://www.google.com/intl/es/chrome/"
+            target="_blank"
+            exact
+            link
+          >
+            Install latest Chrome version
+          </v-btn>
+        </template>
+      </v-banner>
+    </v-container>
   </v-app>
 </template>
 
@@ -19,19 +39,6 @@ export default {
     error: {
       type: Object,
       default: null
-    }
-  },
-  data () {
-    return {
-      pageNotFound: '404 Not Found',
-      otherError: 'An error occurred'
-    }
-  },
-  head () {
-    const title =
-      this.error.statusCode === 404 ? this.pageNotFound : this.otherError
-    return {
-      title
     }
   }
 }

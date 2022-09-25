@@ -29,12 +29,29 @@ export default ({ app }, inject) => {
 
   inject('tearupWavesurferControls', (instance) => {
     if (process.client) {
-      instance.on('ready', () => {
-        // Play/Pause Desktop
-        document.body.onkeyup = (e) => {
-          (e.code === 'Space') && instance.playPause()
-        }
-        // TODO: Delete region on dblclick ...
+      return new Promise((resolve, reject) => {
+        instance.on('ready', () => {
+          // Transport
+          document.body.onkeyup = (e) => {
+            (e.code === 'Space') && instance.playPause()
+          }
+
+          // Regions
+          instance.on('region-dblclick', region => {
+            region.remove()
+          })
+          instance.on('region-update-end', region => {
+            let tag = prompt("Name your clip")
+            
+            region.update({
+              data: {
+                tag
+              }
+            })
+          })
+
+          resolve()
+        })
       })
     }
   })

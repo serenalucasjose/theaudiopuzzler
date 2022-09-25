@@ -8,22 +8,8 @@
       app
     >
       <v-list>
-        <v-list-item
-          v-for="(item, i) in items"
-          :key="i"
-          :to="item.to"
-          router
-          exact
-        >
-          <v-list-item-action>
-            <v-icon>{{ item.icon }}</v-icon>
-          </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title v-text="item.title" />
-          </v-list-item-content>
-        </v-list-item>
         <!-- Theme -->
-        <v-list-item class="pa-2 d-flex justify-start align-center">
+        <v-list-item class="pa-2 px-4 d-flex justify-start align-center">
           <p class="mb-0 mr-4">Light/Dark</p>
           <v-btn icon  @click="toggleTheme()">
             <v-icon v-if="!$vuetify.theme.dark" class="mr-1" color="blue-grey darken-4"
@@ -31,6 +17,14 @@
             >
             <v-icon v-else color="yellow darken-3">mdi-white-balance-sunny</v-icon>
           </v-btn>
+        </v-list-item>
+        <!-- Fullscreen -->
+        <v-list-item class="pa-2 px-4 d-flex justify-start align-center">
+          <p class="mb-0 mr-4">Fullscreen</p>
+          <v-switch
+            inset
+            @change="toggleFullscreen"
+          ></v-switch>
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
@@ -52,6 +46,8 @@
 </template>
 
 <script>
+import screenfull from 'screenfull'
+
 export default {
   data() {
     return {
@@ -69,10 +65,26 @@ export default {
       title: "TheAudioPuzzler",
     };
   },
+  beforeCreate() {
+    // Check if Browser supports AudioContext
+    if (process.client) {
+      if (!window.AudioContext && !window.webkitAudioContext) {
+        return this.$nuxt.error({
+          message: "Your browser does not meet the minimum requirements for AudioContext"
+        })
+      }
+    }
+  },
   methods: {
     toggleTheme() {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark
     },
+    toggleFullscreen() {
+      if (screenfull.isEnabled) {
+        screenfull.request()
+      }
+      screenfull.toggle()
+    }
   },
-};
+}
 </script>

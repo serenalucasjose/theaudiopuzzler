@@ -20,11 +20,22 @@
         <v-stepper-items>
           <!-- One (Upload) -->
           <v-stepper-content step="1">
-            <StepUpload @fileSelected="onFileSelected"/>
+            <!-- Content -->
+            <StepUpload
+              v-if="!processingAudio"
+              @fileSelected="onFileSelected"
+            />
+            <!-- Loading -->
+            <v-progress-linear
+              v-else
+              class="pb-2"
+              indeterminate
+              color="info"
+            ></v-progress-linear>
           </v-stepper-content>
           <!-- Two (Select Regions) -->
           <v-stepper-content step="2">
-            <StepRegions>
+            <StepRegions v-show="!processingAudio">
               <template #actions>
                 <div class="d-flex justify-end align-center">
                   <v-btn
@@ -40,7 +51,6 @@
                     text
                     small
                     @click="
-                      e1 = 3;
                       prepareAudioChunks();
                       $destroyWavesurferInstance(wavesurfer);
                     ">
@@ -49,12 +59,23 @@
                 </div>
               </template>
             </StepRegions>
+            <!-- Loading -->
+            <v-progress-linear
+              v-show="processingAudio"
+              class="pb-2"
+              indeterminate
+              color="info"
+            ></v-progress-linear>
           </v-stepper-content>
           <!-- Three (Re-arrange Regions) -->
           <v-stepper-content step="3">
-            <!-- Audio Chunks -->
+            <!-- Content -->
             <StepPlayground
-              v-if="audioChunks.length > 0 && e1 == 3"
+              v-if="
+                audioChunks.length > 0 && 
+                e1 == 3 && 
+                !processingAudio
+              "
               @setSpeechBuffer="onSetSpeechBuffer"
               :chunks="audioChunks"
               :audioCtx="audioCtx"
@@ -80,35 +101,21 @@
                 </div>
               </template>
             </StepPlayground>
+            <!-- Loading -->
+            <v-progress-linear
+              v-else
+              class="pb-2"
+              indeterminate
+              color="info"
+            ></v-progress-linear>
           </v-stepper-content>
-
+          <!-- Fourth (Export/Share) -->
           <v-stepper-content step="4">
-            <v-card
-              class="mb-12d-flex flex-column justify-center align-center"
-              width="100%"
-            >
-              <!-- Audio Chunks -->
-              <StepShareAndExport
-                v-if="speechBuffer"
-                :buffer="speechBuffer"
-                @startOver="onStartOver"
-              />
-              <!-- Social Share -->
-              <v-card-actions class="justify-center">
-                <v-btn
-                  v-for="(social, i) in socials"
-                  :key="i"
-                  :color="social.color"
-                  class="white--text"
-                  fab
-                  icon
-                  small
-                >
-                  <v-icon>{{ social.icon }}</v-icon>
-                </v-btn>
-              </v-card-actions>
-            </v-card>
-
+            <StepShareAndExport
+              v-if="speechBuffer"
+              :buffer="speechBuffer"
+              @startOver="onStartOver"
+            />
           </v-stepper-content>
         </v-stepper-items>
       </v-stepper>
@@ -126,20 +133,7 @@ const initialState = () => ({
   e1: 1,
   speechBuffer: null,
   uploadedFile: null,
-  socials: [
-    {
-      icon: 'mdi-facebook',
-      color: 'indigo',
-    },
-    {
-      icon: 'mdi-twitter',
-      color: 'green darken-1',
-    },
-    {
-      icon: 'mdi-instagram',
-      color: 'red lighten-3',
-    },
-  ],
+  processingAudio: false
 })
 
 export default {
@@ -154,8 +148,7 @@ export default {
       if (!_file) return false
 
       if (process.client) {
-        // Change Step
-        this.e1 += 1 
+        this.processingAudio = true
 
         // Show Waveform
         this.wavesurfer = this.$createWavesurferInstance({
@@ -167,10 +160,16 @@ export default {
         this.wavesurfer.loadBlob(_file)
         
         // Set controls
-        this.$tearupWavesurferControls(this.wavesurfer)
+        await this.$tearupWavesurferControls(this.wavesurfer)
+
+        // Change Step and set loading
+        this.processingAudio = false
+        this.e1 += 1
       }
     },
     prepareAudioChunks() {
+      this.processingAudio = true
+
       // Get regions and extract their start, stop to create the audio chunks
       const regions = this.wavesurfer.regions.list
       const originalBuffer = util.clone(this.wavesurfer.backend.buffer)
@@ -184,10 +183,18 @@ export default {
         this.audioChunks.push({ regionAsSubBuffer, region: regions[region] })
       }
 
+      // Go next and update loading
+      this.processingAudio = false
+      this.e1 = 3
+
       return 0
     },
     onSetSpeechBuffer({ buffer }) {
+      this.processingAudio = true
+
       this.speechBuffer = buffer
+
+      this.processingAudio = false
     },
     onStartOver() {
       // Destroy Wavesurfer
@@ -204,8 +211,4 @@ export default {
   },
 }
 </script>
-
-<style lang="scss">
-
-</style>
 
