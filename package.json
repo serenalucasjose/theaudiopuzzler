@@ -6,7 +6,8 @@
     "dev": "nuxt",
     "generate": "nuxt generate",
     "start": "nuxt start",
-    "deploy": "push-dir --dir=dist --branch=gh-pages --cleanup"
+    "deploy": "push-dir --dir=dist --branch=gh-pages --cleanup",
+    "dev:host": "nuxt --hostname '192.168.0.150' --port 8000"
   },
   "dependencies": {
     "audio-buffer-utils": "^5.1.2",

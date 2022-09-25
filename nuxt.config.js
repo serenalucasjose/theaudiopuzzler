@@ -11,7 +11,7 @@ export default {
   router: {
     base: '/theaudiopuzzler/'
   },
-
+  
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
     titleTemplate: '%s - theAudioPuzzler',
@@ -36,6 +36,10 @@ export default {
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: [
+    {
+      src: '~/plugins/wavesurfer.js',
+      mode: 'client'
+    },
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components

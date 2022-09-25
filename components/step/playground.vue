@@ -1,9 +1,15 @@
 <template>
-  <div id="audio-playground">
-    <h2 class="text--h2">Arrastra los clips para formar un nuevo audio</h2>
-    <p class="text--caption mb-8">Tambien podes descargarlos por separado</p>
-    <!-- Audio Chunks -->
-    <div class="canvas-wrapper mb-8">
+  <v-container class="pa-0" id="audio-playground">
+    <v-banner
+      icon="mdi-gesture-swipe-down"
+      class="text-left mb-4"
+      rounded
+      color="info"
+    >
+      <h4 class="text--h4 font-weight-regular">Drag'n drop clips</h4>
+    </v-banner>
+    <!-- Audio Clips Wrapper -->
+    <div class="canvas-wrapper mb-4">
       <draggable
         :group="{
           name: 'chunks',
@@ -25,14 +31,15 @@
           @click="playRegion(chunk.regionAsSubBuffer)"
         >
           <canvas
-            width="80px"
-            height="80px"
-            :id="`audio-chunk-${chunk.regionAsSubBuffer.length}`">
+            :id="`audio-chunk-${chunk.regionAsSubBuffer.length}`"
+            :width="canvasSize"
+            :height="canvasSize"
+          >
           </canvas>
         </v-card>
       </draggable>
     </div>
-    <!-- New Speech -->
+    <!-- New Speech Wrapper -->
     <div class="speech-wrapper">
       <draggable
         :list="speechChunks"
@@ -51,6 +58,7 @@
           <div id="speech-waveform"></div>
         </v-sheet>
       </draggable>
+      <!-- Speech Actions -->
       <v-btn-toggle group>
         <v-btn
           color="secondary"
@@ -58,6 +66,7 @@
           @click="wavesurfer.play()"
           text
           value="left"
+          xSmall
         >
           Preview
         </v-btn>
@@ -67,24 +76,27 @@
           color="error"
           text
           @click="initSpeech"
+          xSmall
         >
           Clear
         </v-btn>
       </v-btn-toggle>
     </div>
-  </div>
+    <!-- Actions -->
+    <slot name="actions"></slot>
+  </v-container>
 </template>
 
 <script>
-import WaveSurfer from 'wavesurfer.js'
-import RegionsPlugin from 'wavesurfer.js/dist/plugin/wavesurfer.regions.min.js'
-
 import drawBuffer from 'draw-wave'
 import draggable from 'vuedraggable'
 
 import util from 'audio-buffer-utils'
 
+import responsiveUtils from '~/mixins/responsiveUtils.js'
+
 export default {
+  mixins: [responsiveUtils],
   props: {
     chunks: {
       type: Array,
@@ -105,21 +117,24 @@ export default {
     speechBuffer: null,
     wavesurfer: null
   }),
+  computed: {
+    canvasSize: function () {
+      return this.isMobile ? '40px' : '80px'
+    }
+  },
   async mounted() {
     await this.$nextTick()
-
+    // Init UI
     this.initSoundwaves()
     this.initWavesurfer()
+    // Init empty Audio Buffer
+    this.initSpeech()
   },
   beforeDestroy() {
     this.$emit('setSpeechBuffer', { buffer: util.clone(this.wavesurfer.backend.buffer) })
     
-    // Teardown Wavesurfer
-    this.wavesurfer.destroy()
-
-    document.body.onkeyup = (e) => {
-      (e.code === 'Space') && false
-    }
+    // Destroy Wavesurfer
+    this.$destroyWavesurferInstance(this.wavesurfer)
   },
   methods: {
     async initSoundwaves() {
@@ -136,29 +151,16 @@ export default {
       }
     },
     initWavesurfer() {
-      this.wavesurfer = WaveSurfer.create({
+      // Show Waveform
+      this.wavesurfer = this.$createWavesurferInstance({
         container: '#speech-waveform',
         audioContext: this.audioCtx,
         interact: true,
-        scrollParent: true,
-        plugins: [RegionsPlugin.create({})]
+        scrollParent: true
       })
 
-      // Init empty Audio Buffer
-      this.initSpeech()
-
-      // Init  Handlers
-      this.wavesurfer.on('ready', () => {
-        this.initKeyboardControls()
-      })
-    },
-    initKeyboardControls() {
-      // Space (play/stop)
-      document.body.onkeyup = (e) => {
-        (e.code === 'Space') && this.wavesurfer.playPause()
-      }
-
-      return 0
+      // Set controls
+      this.$tearupWavesurferControls(this.wavesurfer)
     },
     playRegion(region) {
       const source = this.audioCtx.createBufferSource()
@@ -187,11 +189,10 @@ export default {
       region.end = updatedBuffer.duration
       region.color = 'hsla(200, 50%, 70%, 0.4)'
 
-      // this.wavesurfer.addRegion(region)
-
       this.wavesurfer.stop()
     },
     initSpeech() {
+      this.wavesurfer.clearRegions()
       this.wavesurfer.loadDecodedBuffer(util.create(1))
     }
   }
@@ -202,7 +203,7 @@ export default {
 #audio-playground {
   width: 100%;
   position: relative;
-  height: 250px;
+  // height: 250px;
   .canvas-wrapper > div {
     display: flex;
     flex-direction: row;
