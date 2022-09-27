@@ -1,9 +1,19 @@
 import colors from 'vuetify/es5/util/colors'
 import VuetifyLoaderPlugin from 'vuetify-loader/lib/plugin' 
 
+import path from 'path'
+import fs from 'fs'
+
 export default {
   // Disable server-side rendering: https://go.nuxtjs.dev/ssr-mode
   ssr: false,
+
+  server: {
+    https: {
+      key: fs.readFileSync(path.resolve(__dirname, 'localhost-key.pem')),
+      cert: fs.readFileSync(path.resolve(__dirname, 'localhost.pem'))
+    }
+  },
 
   // Target: https://go.nuxtjs.dev/config-target
   target: 'static',

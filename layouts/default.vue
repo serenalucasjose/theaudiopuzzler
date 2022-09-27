@@ -23,6 +23,7 @@
           <p class="mb-0 mr-4">Fullscreen</p>
           <v-switch
             inset
+            :value="fullscreenEnabled"
             @change="toggleFullscreen"
           ></v-switch>
         </v-list-item>
@@ -51,6 +52,7 @@ import screenfull from 'screenfull'
 export default {
   data() {
     return {
+      fullscreenEnabled: false,
       clipped: false,
       drawer: false,
       fixed: false,
@@ -62,8 +64,8 @@ export default {
         },
       ],
       miniVariant: false,
-      title: "TheAudioPuzzler",
-    };
+      title: "TheAudioPuzzler"
+    }
   },
   beforeCreate() {
     // Check if Browser supports AudioContext
@@ -75,15 +77,43 @@ export default {
       }
     }
   },
+  created() {
+    // Get basic theme config from LS
+    if (process.client) {
+      try {
+        const isWhiteTheme = JSON.parse(window.localStorage.getItem('whiteTheme'))
+        // Update theme based on previous selection
+        this.$vuetify.theme.dark = !isWhiteTheme
+      } catch(e) {
+        return false
+      }
+    }
+  },
+  mounted() {
+    // Attach screenfull events
+    if (screenfull.isEnabled) {
+      screenfull.on('change', async () => {
+        this.fullscreenEnabled = !this.fullscreenEnabled
+      })
+    }
+  },
+  beforeDestroy() {
+    screenfull.off('change')
+  },
   methods: {
     toggleTheme() {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark
-    },
-    toggleFullscreen() {
-      if (screenfull.isEnabled) {
-        screenfull.request()
+
+      try {
+        window.localStorage.setItem('whiteTheme', !this.$vuetify.theme.dark)
+      } catch(e) {
+        return false
       }
-      screenfull.toggle()
+    },
+    async toggleFullscreen() {
+      if (screenfull.isEnabled) {
+        await screenfull.toggle()
+      }
     }
   },
 }

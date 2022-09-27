@@ -10,29 +10,15 @@
         </p>
       </div>
       <!-- Share actions -->
-      <div class="share-actions text-right">
-        <v-btn
-          v-for="(social, i) in socials"
-          :key="i"
-          :color="social.color"
-          class="white--text"
-          fab
-          icon
-          small
-          @click="share"
-        >
-          <v-icon>{{ social.icon }}</v-icon>
-        </v-btn>
-      </div>
       <template v-slot:actions>
         <div class="d-flex justify-space-between align-center ma-0">
           <v-btn
-            color="primary"
-            @click="download"
+            color="secondary"
+            @click="share"
             text
             small
           >
-            Download
+            <v-icon small>mdi-share-variant</v-icon>
           </v-btn>
           <v-btn
             text
@@ -41,6 +27,14 @@
             small
           >
             Go again
+          </v-btn>
+          <v-btn
+            color="primary"
+            @click="download"
+            large
+            text
+          >
+            Download
           </v-btn>
         </div>
       </template>
@@ -58,14 +52,6 @@ export default {
       type: AudioBuffer
     }
   },
-  data: () => ({
-    socials: [
-      {
-        icon: 'mdi-share-variant',
-        color: 'secondary',
-      }
-    ],
-  }),
   methods: {
     getBufferAsBlob() {
       const wavData = toWav(this.buffer)
@@ -76,11 +62,21 @@ export default {
     download() {
       (process.client) && saveAs(this.getBufferAsBlob(), "Result - TheAudioPuzzler.wav")
     },
-    share() {
+    async share() {
       if (process.client && navigator.canShare()) {
         const file = new File([this.getBufferAsBlob()], "Result - TheAudioPuzzler.wav")
 
-        navigator.share(file)
+        if (navigator.canShare && navigator.canShare(file)) {
+          try {
+            await navigator.share(file)
+          } catch (error) {
+            console.error(error)
+          }
+        } else {
+          return this.$nuxt.error({
+            message: `Your system doesn't support sharing files.`
+          })
+        }
       }
     }
   }

@@ -12,7 +12,7 @@
       <h4 class="text--h4 font-weight-regular">Drag'n drop clips</h4>
     </v-banner>
     <!-- Audio Clips Wrapper -->
-    <div class="canvas-wrapper mb-4">
+    <div class="canvas-wrapper mb-4" ref="regionsWrapper">
       <draggable
         :group="{
           name: 'chunks',
@@ -161,6 +161,12 @@ export default {
           '#999999'
         )
       }
+
+      // Fix Container's height
+      let $wrapper = this.$refs?.regionsWrapper
+      const { clientHeight } = $wrapper
+
+      $wrapper.style.height = `${clientHeight}px`
     },
     initWavesurfer() {
       // Show Waveform

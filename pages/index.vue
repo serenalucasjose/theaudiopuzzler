@@ -94,7 +94,7 @@
                     color="primary"
                     text
                     small
-                    @click="e1 = 4;"
+                    @click="e1 += 1;"
                   >
                     Continue
                   </v-btn>
@@ -138,17 +138,13 @@ const initialState = () => ({
 
 export default {
   data: () => initialState(),
-  created() {
-    if (process.client) {
-      this.audioCtx = new (window.AudioContext || window.webkitAudioContext)()
-    }
-  },
   methods: {
     async onFileSelected(_file) {
       if (!_file) return false
 
       if (process.client) {
         this.processingAudio = true
+        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)()
 
         // Show Waveform
         this.wavesurfer = this.$createWavesurferInstance({
@@ -185,7 +181,7 @@ export default {
 
       // Go next and update loading
       this.processingAudio = false
-      this.e1 = 3
+      this.e1 += 1
 
       return 0
     },
